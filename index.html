@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bone Fracture Detection System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-x-ray"></i>
+                    <h1>BoneScan AI</h1>
+                </div>
+                <nav class="nav">
+                    <a href="#home" class="nav-link active">Home</a>
+                    <a href="#detection" class="nav-link">Detection</a>
+                    <a href="#results" class="nav-link">Results</a>
+                    <a href="#about" class="nav-link">About</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h2>AI-Powered Bone Fracture Detection</h2>
+                    <p>Advanced machine learning technology to assist in rapid and accurate bone fracture identification from X-ray images.</p>
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <span class="stat-number">95%</span>
+                            <span class="stat-label">Accuracy</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">< 5s</span>
+                            <span class="stat-label">Analysis Time</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">24/7</span>
+                            <span class="stat-label">Available</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="medical-icon">
+                        <i class="fas fa-bone"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Detection Section -->
+    <section id="detection" class="detection-section">
+        <div class="container">
+            <h2 class="section-title">Upload X-Ray Image</h2>
+            
+            <!-- Upload Area -->
+            <div class="upload-container">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-content">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <h3>Drop your X-ray image here</h3>
+                        <p>or click to browse files</p>
+                        <span class="file-info">Supports: JPG, PNG, JPEG (Max: 10MB)</span>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                </div>
+                
+                <!-- Image Preview -->
+                <div class="image-preview hidden" id="imagePreview">
+                    <div class="preview-container">
+                        <img id="previewImage" alt="Uploaded X-ray">
+                        <div class="image-overlay">
+                            <button class="btn-secondary" id="changeImage">
+                                <i class="fas fa-edit"></i> Change Image
+                            </button>
+                        </div>
+                    </div>
+                    <div class="image-info">
+                        <h4 id="fileName">image.jpg</h4>
+                        <p id="fileSize">2.3 MB</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Controls -->
+            <div class="analysis-controls">
+                <div class="settings-panel">
+                    <h4>Detection Settings</h4>
+                    <div class="setting-group">
+                        <label>Confidence Threshold</label>
+                        <input type="range" id="confidenceSlider" min="0.1" max="1" step="0.1" value="0.5">
+                        <span id="confidenceValue">0.5</span>
+                    </div>
+                    <div class="setting-group">
+                        <label>Model Type</label>
+                        <select id="modelSelect">
+                            <option value="yolov8n">YOLOv8 Nano (Fast)</option>
+                            <option value="yolov8s">YOLOv8 Small (Balanced)</option>
+                            <option value="yolov8m">YOLOv8 Medium (Accurate)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="btn-primary analyze-btn" id="analyzeBtn" disabled>
+                    <i class="fas fa-search"></i>
+                    <span>Analyze Image</span>
+                </button>
+            </div>
+
+            <!-- Loading Animation -->
+            <div class="loading-container hidden" id="loadingContainer">
+                <div class="loading-animation">
+                    <div class="medical-pulse">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h3>Analyzing X-ray Image...</h3>
+                    <p>Our AI is examining the image for potential fractures</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <span class="progress-text" id="progressText">0%</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results Section -->
+    <section id="results" class="results-section hidden">
+        <div class="container">
+            <h2 class="section-title">Detection Results</h2>
+            
+            <div class="results-container">
+                <!-- Original and Analyzed Images -->
+                <div class="image-comparison">
+                    <div class="image-panel">
+                        <h4>Original X-ray</h4>
+                        <div class="result-image">
+                            <img id="originalResult" alt="Original X-ray">
+                        </div>
+                    </div>
+                    <div class="image-panel">
+                        <h4>Detection Results</h4>
+                        <div class="result-image">
+                            <img id="analyzedResult" alt="Analyzed X-ray">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Summary -->
+                <div class="results-summary">
+                    <div class="summary-header">
+                        <div class="status-indicator" id="statusIndicator">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span id="statusText">Fracture Detected</span>
+                        </div>
+                        <div class="confidence-score">
+                            <span class="score-label">Confidence:</span>
+                            <span class="score-value" id="confidenceScore">87%</span>
+                        </div>
+                    </div>
+
+                    <div class="detection-details">
+                        <h4>Detection Details</h4>
+                        <div class="details-grid" id="detectionDetails">
+                            <!-- Dynamic content will be added here -->
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn-secondary" id="downloadReport">
+                            <i class="fas fa-download"></i>
+                            Download Report
+                        </button>
+                        <button class="btn-secondary" id="analyzeAnother">
+                            <i class="fas fa-plus"></i>
+                            Analyze Another
+                        </button>
+                        <button class="btn-primary" id="shareResults">
+                            <i class="fas fa-share"></i>
+                            Share Results
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>BoneScan AI</h4>
+                    <p>Advanced AI-powered medical imaging analysis for fracture detection.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Important Notice</h4>
+                    <p><strong>Disclaimer:</strong> This tool is for educational and research purposes only. Always consult with qualified medical professionals for diagnosis and treatment.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Built with ❤️ for medical technology advancement</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
