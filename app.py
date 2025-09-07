@@ -364,11 +364,18 @@ def internal_error(e):
     return jsonify({'error': 'Internal server error occurred'}), 500
 
 # Initialize the detection system when the app starts
-@app.before_first_request
+# @app.before_first_request
+# def startup():
+#     """Initialize the detection system on startup"""
+#     logger.info("🚀 Starting Bone Fracture Detection Web Application")
+#     initialize_detection_system()
+@app.before_request
 def startup():
     """Initialize the detection system on startup"""
-    logger.info("🚀 Starting Bone Fracture Detection Web Application")
-    initialize_detection_system()
+    if not hasattr(startup, 'has_run'):
+        startup.has_run = True
+        logger.info("🚀 Starting Bone Fracture Detection Web Application")
+        initialize_detection_system()
 
 if __name__ == '__main__':
     # Initialize detection system
