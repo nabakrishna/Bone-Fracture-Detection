@@ -1,36 +1,34 @@
-🩻 Overview
-BoneScan AI is an advanced artificial intelligence-powered system designed to assist healthcare professionals in rapid and accurate bone fracture detection from X-ray images. Leveraging state-of-the-art YOLOv8 deep learning architecture, our system provides reliable diagnostic support for medical imaging analysis.
+BoneScan AI - Bone Fracture Detection System
+About the Project
+BoneScan AI is an intelligent web-based system designed to help healthcare professionals quickly and accurately detect bone fractures in X-ray images. Using advanced artificial intelligence, the system can analyze medical images within seconds and provide detailed results with visual annotations, making it easier for medical staff to identify potential fractures and make informed decisions.
 
-✨ Features
-🤖 AI-Powered Detection: Advanced YOLOv8 model optimized for medical imaging
-
-⚡ Real-Time Analysis: Sub-3 second processing time
-
-🎯 High Accuracy: 95%+ detection accuracy rate
-
-🖥️ Modern Web Interface: Intuitive drag-and-drop functionality
-
-📱 Responsive Design: Works on desktop, tablet, and mobile devices
-
-🔒 Privacy-Focused: Local processing, no data storage
-
-📊 Detailed Reports: Comprehensive analysis results with confidence scores
+The system combines cutting-edge machine learning technology with a user-friendly interface, allowing doctors and radiologists to simply upload X-ray images and receive immediate AI-assisted analysis with confidence scores and medical recommendations.
 
 🚀 Live Demo
-🌐 View Live Demo
+Try BoneScan AI
 
-Note: The backend is not yet ready for integration. Currently showcasing frontend interface only.
+🛠️ Technologies Used
+Backend
+Python - Core programming language
 
-📸 Screenshots
-Main Interface
-![Main Interface](screenshots/main-interface. Results
-![Detection Results
-![About Section](screenshots/ Stack
+Flask - Web framework for API and routing
+
+YOLOv8 - Deep learning model for object detection
+
+PyTorch - Machine learning framework
+
+OpenCV - Image processing and computer vision
+
+Ultralytics - YOLO implementation library
+
+NumPy - Numerical computations
+
+Pillow - Image manipulation
 
 Frontend
-HTML5 - Semantic markup
+HTML5 - Structure and markup
 
-CSS3 - Modern styling with Grid & Flexbox
+CSS3 - Styling and responsive design
 
 JavaScript - Interactive functionality
 
@@ -38,15 +36,53 @@ Font Awesome - Icons
 
 Google Fonts - Typography
 
-Backend (In Development)
-Python - Core programming language
+Deployment
+Gunicorn - Production web server
 
-YOLOv8 - Object detection model
+Render - Cloud hosting platform
 
-PyTorch - Deep learning framework
+⚡ Quick Start
+Clone the repository
 
-Ultralytics - YOLO implementation
+bash
+git clone https://github.com/nabakrishna/Bone-Fracture-Detection.git
+cd Bone-Fracture-Detection
+Install dependencies
 
-Flask - Web framework (planned)
+bash
+pip install -r requirements.txt
+Run the application
 
-OpenCV - Image processing
+bash
+python app.py
+Open your browser
+
+text
+http://localhost:5000
+🎯 How It Works
+Upload an X-ray image through the web interface
+
+AI model processes the image and detects potential fractures
+
+Results display original image alongside annotated version with bounding boxes
+
+Get detailed analysis with confidence scores and medical recommendations
+
+📋 Features
+✅ Real-time fracture detection
+
+✅ Visual results with bounding boxes
+
+✅ Confidence scoring
+
+✅ Medical recommendations
+
+✅ Responsive web design
+
+✅ Privacy-focused (local processing)
+
+⚠️ Medical Disclaimer
+This tool is designed to assist healthcare professionals and should not replace professional medical diagnosis or treatment decisions.
+
+📄 License
+MIT License - feel free to use and modify for your projects.
