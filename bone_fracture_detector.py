@@ -291,14 +291,56 @@ class BoneFractureDetectionSystem:
             print(f"❌ Training failed: {e}")
             return False
     
+    # def detect_fractures(self, image_path: str, model_path: str = None, save_results: bool = True) -> Dict:
+    #     """Detect fractures in a single image"""
+        
+    #     # Load model if not already loaded
+    #     if not self.model:
+    #         if not self.load_model(model_path):
+    #             return {}
+        
+    #     try:
+    #         # Run inference
+    #         results = self.model(
+    #             image_path, 
+    #             conf=self.config['confidence_threshold'], 
+    #             iou=self.config['iou_threshold']
+    #         )
+            
+    #         # Extract results
+    #         result = results[0]
+    #         detections = {
+    #             'image_path': image_path,
+    #             'boxes': result.boxes.xyxy.cpu().numpy() if result.boxes is not None else [],
+    #             'confidences': result.boxes.conf.cpu().numpy() if result.boxes is not None else [],
+    #             'classes': result.boxes.cls.cpu().numpy() if result.boxes is not None else [],
+    #             'class_names': [result.names[int(cls)] for cls in result.boxes.cls] if result.boxes is not None else []
+    #         }
+            
+    #         print(f"🔍 Detected {len(detections['boxes'])} fractures in {Path(image_path).name}")
+            
+    #         if save_results and len(detections['boxes']) > 0:
+    #             # Save annotated image
+    #             output_path = self.dirs['predictions'] / f"detected_{Path(image_path).name}"
+    #             annotated_img = result.plot()
+    #             cv2.imwrite(str(output_path), annotated_img)
+    #             detections['output_path'] = str(output_path)
+    #             print(f"💾 Saved results to: {output_path}")
+            
+    #         return detections
+            
+    #     except Exception as e:
+    #         print(f"❌ Error during detection: {e}")
+    #         return {}
+
     def detect_fractures(self, image_path: str, model_path: str = None, save_results: bool = True) -> Dict:
         """Detect fractures in a single image"""
-        
+    
         # Load model if not already loaded
         if not self.model:
             if not self.load_model(model_path):
-                return {}
-        
+                return {'boxes': [], 'confidences': [], 'class_names': [], 'output_path': None}
+    
         try:
             # Run inference
             results = self.model(
@@ -306,32 +348,60 @@ class BoneFractureDetectionSystem:
                 conf=self.config['confidence_threshold'], 
                 iou=self.config['iou_threshold']
             )
-            
+        
             # Extract results
             result = results[0]
+        
+            # Convert numpy arrays to lists for JSON compatibility
+            boxes = result.boxes.xyxy.cpu().numpy().tolist() if result.boxes is not None else []
+            confidences = result.boxes.conf.cpu().numpy().tolist() if result.boxes is not None else []
+            classes = result.boxes.cls.cpu().numpy().tolist() if result.boxes is not None else []
+            class_names = [result.names[int(cls)] for cls in result.boxes.cls] if result.boxes is not None else []
+        
             detections = {
                 'image_path': image_path,
-                'boxes': result.boxes.xyxy.cpu().numpy() if result.boxes is not None else [],
-                'confidences': result.boxes.conf.cpu().numpy() if result.boxes is not None else [],
-                'classes': result.boxes.cls.cpu().numpy() if result.boxes is not None else [],
-                'class_names': [result.names[int(cls)] for cls in result.boxes.cls] if result.boxes is not None else []
+                'boxes': boxes,
+                'confidences': confidences,
+                'classes': classes,
+                'class_names': class_names,
+                'output_path': None  # Initialize as None
             }
-            
-            print(f"🔍 Detected {len(detections['boxes'])} fractures in {Path(image_path).name}")
-            
-            if save_results and len(detections['boxes']) > 0:
-                # Save annotated image
-                output_path = self.dirs['predictions'] / f"detected_{Path(image_path).name}"
-                annotated_img = result.plot()
-                cv2.imwrite(str(output_path), annotated_img)
-                detections['output_path'] = str(output_path)
-                print(f"💾 Saved results to: {output_path}")
-            
+        
+            print(f"🔍 Detected {len(boxes)} fractures in {Path(image_path).name}")
+        
+            # Save annotated image
+            if save_results:
+                try:
+                    # Ensure predictions directory exists
+                    self.dirs['predictions'].mkdir(parents=True, exist_ok=True)
+                
+                    # Create output path
+                    output_path = self.dirs['predictions'] / f"detected_{Path(image_path).name}"
+                
+                    # Generate annotated image with bounding boxes
+                    annotated_img = result.plot()
+                
+                    # Convert RGB to BGR for cv2 (YOLO outputs RGB, cv2 expects BGR)
+                    annotated_img_bgr = cv2.cvtColor(annotated_img, cv2.COLOR_RGB2BGR)
+                
+                    # Save the image
+                    success = cv2.imwrite(str(output_path), annotated_img_bgr)
+                
+                    if success:
+                        detections['output_path'] = str(output_path)
+                        print(f"💾 Saved annotated image to: {output_path}")
+                    else:
+                        print(f"❌ Failed to save image to: {output_path}")
+                    
+                except Exception as save_error:
+                    print(f"❌ Error saving annotated image: {save_error}")
+        
             return detections
-            
+        
         except Exception as e:
             print(f"❌ Error during detection: {e}")
-            return {}
+            return {'boxes': [], 'confidences': [], 'class_names': [], 'output_path': None}
+
     
     def batch_detect(self, images_path: str, model_path: str = None) -> List[Dict]:
         """Detect fractures in multiple images"""
@@ -409,3 +479,4 @@ class BoneFractureDetectionSystem:
 # Bone Fracture Detection System
 
 ## Directory Structure
+
