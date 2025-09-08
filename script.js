@@ -113,13 +113,126 @@ analyzeBtn.addEventListener('click', () => {
 });
 
 // Start Analysis
+// function startAnalysis() {
+//     // Hide detection section and show loading
+//     document.getElementById('detection').style.display = 'none';
+//     loadingContainer.classList.remove('hidden');
+//     resultsSection.classList.add('hidden');
+    
+//     // Simulate analysis progress
+//     let progress = 0;
+//     const progressInterval = setInterval(() => {
+//         progress += Math.random() * 15;
+//         if (progress > 100) progress = 100;
+        
+//         document.getElementById('progressFill').style.width = progress + '%';
+//         document.getElementById('progressText').textContent = Math.round(progress) + '%';
+        
+//         if (progress >= 100) {
+//             clearInterval(progressInterval);
+//             setTimeout(() => {
+//                 showResults();
+//             }, 1000);
+//         }
+//     }, 200);
+// }
+
+// // Show Results
+// function showResults() {
+//     loadingContainer.classList.add('hidden');
+//     resultsSection.classList.remove('hidden');
+    
+//     // Simulate results (in real implementation, this would come from your Python backend)
+//     const mockResults = {
+//         fractureDetected: Math.random() > 0.5,
+//         confidence: Math.round(60 + Math.random() * 35),
+//         detections: [
+//             {
+//                 type: 'Potential Fracture',
+//                 location: 'Radius bone',
+//                 confidence: '87%',
+//                 severity: 'Moderate'
+//             },
+//             {
+//                 type: 'Analysis Area',
+//                 location: 'Wrist joint',
+//                 confidence: '92%',
+//                 severity: 'High attention'
+//             }
+//         ]
+//     };
+    
+//     displayResults(mockResults);
+    
+//     // Scroll to results
+//     resultsSection.scrollIntoView({
+//         behavior: 'smooth',
+//         block: 'start'
+//     });
+// }
+
+// // Display Results
+// function displayResults(results) {
+//     const statusIndicator = document.getElementById('statusIndicator');
+//     const statusText = document.getElementById('statusText');
+//     const confidenceScore = document.getElementById('confidenceScore');
+//     const detectionDetails = document.getElementById('detectionDetails');
+//     const originalResult = document.getElementById('originalResult');
+//     const analyzedResult = document.getElementById('analyzedResult');
+    
+//     // Set status
+//     if (results.fractureDetected) {
+//         statusIndicator.className = 'status-indicator positive';
+//         statusIndicator.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+//         statusText.textContent = 'Potential Fracture Detected';
+//     } else {
+//         statusIndicator.className = 'status-indicator negative';
+//         statusIndicator.innerHTML = '<i class="fas fa-check-circle"></i>';
+//         statusText.textContent = 'No Fracture Detected';
+//     }
+    
+//     // Set confidence
+//     confidenceScore.textContent = results.confidence + '%';
+    
+//     // Set images (using the uploaded image for both - in real app, analyzed would have bounding boxes)
+//     originalResult.src = previewImage.src;
+//     analyzedResult.src = previewImage.src;
+    
+//     // Set detection details
+//     detectionDetails.innerHTML = '';
+//     results.detections.forEach(detection => {
+//         const detailItem = document.createElement('div');
+//         detailItem.className = 'detail-item';
+//         detailItem.innerHTML = `
+//             <div class="detail-label">${detection.type}</div>
+//             <div class="detail-value">${detection.location}</div>
+//             <div class="detail-label">Confidence: ${detection.confidence}</div>
+//             <div class="detail-label">Severity: ${detection.severity}</div>
+//         `;
+//         detectionDetails.appendChild(detailItem);
+//     });
+// }
+
+// Start Analysis - UPDATED to call real backend
 function startAnalysis() {
     // Hide detection section and show loading
     document.getElementById('detection').style.display = 'none';
     loadingContainer.classList.remove('hidden');
     resultsSection.classList.add('hidden');
     
-    // Simulate analysis progress
+    // Get the actual file from input
+    const file = fileInput.files[0];
+    if (!file) {
+        alert('Please select a file first');
+        return;
+    }
+    
+    // Prepare form data for upload
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('confidence', confidenceSlider.value);
+    
+    // Show progress animation
     let progress = 0;
     const progressInterval = setInterval(() => {
         progress += Math.random() * 15;
@@ -130,39 +243,55 @@ function startAnalysis() {
         
         if (progress >= 100) {
             clearInterval(progressInterval);
-            setTimeout(() => {
-                showResults();
-            }, 1000);
         }
     }, 200);
+    
+    // Call your Flask backend
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        clearInterval(progressInterval);
+        document.getElementById('progressFill').style.width = '100%';
+        document.getElementById('progressText').textContent = '100%';
+        
+        setTimeout(() => {
+            if (data.success) {
+                showResults(data);  // Pass real data from backend
+            } else {
+                alert('Analysis failed: ' + (data.error || 'Unknown error'));
+                loadingContainer.classList.add('hidden');
+                document.getElementById('detection').style.display = 'block';
+            }
+        }, 1000);
+    })
+    .catch(error => {
+        clearInterval(progressInterval);
+        console.error('Error:', error);
+        alert('Analysis failed. Please try again.');
+        loadingContainer.classList.add('hidden');
+        document.getElementById('detection').style.display = 'block';
+    });
 }
 
-// Show Results
-function showResults() {
+// Show Results - UPDATED to use real backend data
+function showResults(backendData) {
     loadingContainer.classList.add('hidden');
     resultsSection.classList.remove('hidden');
     
-    // Simulate results (in real implementation, this would come from your Python backend)
-    const mockResults = {
-        fractureDetected: Math.random() > 0.5,
-        confidence: Math.round(60 + Math.random() * 35),
-        detections: [
-            {
-                type: 'Potential Fracture',
-                location: 'Radius bone',
-                confidence: '87%',
-                severity: 'Moderate'
-            },
-            {
-                type: 'Analysis Area',
-                location: 'Wrist joint',
-                confidence: '92%',
-                severity: 'High attention'
-            }
-        ]
+    // Use real results from your Flask backend
+    const results = {
+        fractureDetected: backendData.fracture_detected,
+        confidence: Math.round(backendData.confidence * 100),
+        detections: backendData.detections || [],
+        image_url: backendData.image_url,
+        analyzed_image_url: backendData.analyzed_image_url,  // KEY: This has the annotated image
+        analysis: backendData.analysis || {}
     };
     
-    displayResults(mockResults);
+    displayResults(results);
     
     // Scroll to results
     resultsSection.scrollIntoView({
@@ -171,7 +300,7 @@ function showResults() {
     });
 }
 
-// Display Results
+// Display Results - UPDATED to show different images
 function displayResults(results) {
     const statusIndicator = document.getElementById('statusIndicator');
     const statusText = document.getElementById('statusText');
@@ -194,23 +323,32 @@ function displayResults(results) {
     // Set confidence
     confidenceScore.textContent = results.confidence + '%';
     
-    // Set images (using the uploaded image for both - in real app, analyzed would have bounding boxes)
-    originalResult.src = previewImage.src;
-    analyzedResult.src = previewImage.src;
+    // ✅ KEY FIX: Set DIFFERENT images for left and right
+    originalResult.src = results.image_url || previewImage.src;  // Original X-ray
+    analyzedResult.src = results.analyzed_image_url || results.image_url || previewImage.src;  // Annotated with boxes
     
-    // Set detection details
+    // Force refresh if same filename (add timestamp)
+    if (results.analyzed_image_url) {
+        analyzedResult.src = results.analyzed_image_url + '?t=' + new Date().getTime();
+    }
+    
+    // Set detection details using real backend data
     detectionDetails.innerHTML = '';
-    results.detections.forEach(detection => {
-        const detailItem = document.createElement('div');
-        detailItem.className = 'detail-item';
-        detailItem.innerHTML = `
-            <div class="detail-label">${detection.type}</div>
-            <div class="detail-value">${detection.location}</div>
-            <div class="detail-label">Confidence: ${detection.confidence}</div>
-            <div class="detail-label">Severity: ${detection.severity}</div>
-        `;
-        detectionDetails.appendChild(detailItem);
-    });
+    if (results.detections && results.detections.length > 0) {
+        results.detections.forEach(detection => {
+            const detailItem = document.createElement('div');
+            detailItem.className = 'detail-item';
+            detailItem.innerHTML = `
+                <div class="detail-label">${detection.type}</div>
+                <div class="detail-value">${detection.location}</div>
+                <div class="detail-label">Confidence: ${detection.confidence}</div>
+                <div class="detail-label">Severity: ${detection.severity}</div>
+            `;
+            detectionDetails.appendChild(detailItem);
+        });
+    } else {
+        detectionDetails.innerHTML = '<div class="detail-item">No specific detections found</div>';
+    }
 }
 
 // Action Buttons
@@ -253,3 +391,4 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         }
     });
 });
+
