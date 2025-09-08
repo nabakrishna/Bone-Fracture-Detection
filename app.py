@@ -48,21 +48,41 @@ app.config.update({
 })
 
 # Create necessary directories safely (RENDER FIX)
+# def create_directories():
+#     """Create necessary directories safely"""
+#     directories = [
+#         app.config['UPLOAD_FOLDER'],
+#         'static/results',
+#         'logs',
+#         'models/trained'
+#     ]
+    
+#     for directory in directories:
+#         try:
+#             os.makedirs(directory, exist_ok=True)  # exist_ok=True prevents the error
+#             logger.info(f"✅ Directory created/verified: {directory}")
+#         except Exception as e:
+#             logger.error(f"❌ Failed to create directory {directory}: {e}")
+
 def create_directories():
     """Create necessary directories safely"""
     directories = [
-        app.config['UPLOAD_FOLDER'],
-        'static/results',
+        'static/uploads',
+        'static/results', 
         'logs',
         'models/trained'
     ]
     
     for directory in directories:
         try:
-            os.makedirs(directory, exist_ok=True)  # exist_ok=True prevents the error
-            logger.info(f"✅ Directory created/verified: {directory}")
+            if not os.path.exists(directory):
+                os.makedirs(directory, exist_ok=True)
+                logger.info(f"✅ Directory created: {directory}")
+            else:
+                logger.info(f"✅ Directory already exists: {directory}")
         except Exception as e:
-            logger.error(f"❌ Failed to create directory {directory}: {e}")
+            logger.warning(f"⚠️ Directory issue for {directory}: {e}")
+            # Don't fail the app, just log the warning
 
 # Create directories on startup
 create_directories()
@@ -70,6 +90,43 @@ create_directories()
 # Global variables
 detection_system = None
 model_loaded = False
+
+# def initialize_detection_system():
+#     """Initialize the bone fracture detection system"""
+#     global detection_system, model_loaded
+#     try:
+#         if BoneFractureDetectionSystem is None:
+#             logger.warning("⚠️ BoneFractureDetectionSystem not available, running in demo mode")
+#             model_loaded = False
+#             return
+            
+#         project_root = app.config['PROJECT_ROOT']
+#         detection_system = BoneFractureDetectionSystem(project_root=project_root)
+        
+#         # Try to load a trained model if available
+#         trained_models_dir = Path(project_root) / "models" / "trained"
+#         best_model_path = None
+        
+#         # Look for trained models
+#         if trained_models_dir.exists():
+#             for model_dir in trained_models_dir.glob("*/weights"):
+#                 best_model = model_dir / "best.pt"
+#                 if best_model.exists():
+#                     best_model_path = str(best_model)
+#                     break
+        
+#         # Load model
+#         if detection_system.load_model(best_model_path):
+#             model_loaded = True
+#             logger.info(f"✅ Model loaded successfully: {best_model_path or 'pretrained'}")
+#         else:
+#             logger.warning("⚠️ Model loading failed, will use pretrained model")
+#             model_loaded = False
+            
+#     except Exception as e:
+#         logger.error(f"❌ Failed to initialize detection system: {e}")
+#         detection_system = None
+#         model_loaded = False
 
 def initialize_detection_system():
     """Initialize the bone fracture detection system"""
@@ -81,6 +138,14 @@ def initialize_detection_system():
             return
             
         project_root = app.config['PROJECT_ROOT']
+        
+        # TEMPORARY FIX: Create directories manually first to avoid [Errno 17] error
+        try:
+            os.makedirs(os.path.join(project_root, 'models', 'trained'), exist_ok=True)
+            logger.info("✅ Pre-created models/trained directory")
+        except Exception as dir_error:
+            logger.warning(f"⚠️ Directory creation warning: {dir_error}")
+        
         detection_system = BoneFractureDetectionSystem(project_root=project_root)
         
         # Try to load a trained model if available
