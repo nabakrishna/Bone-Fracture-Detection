@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: bone-fracture-detection
+    env: python
+    plan: free
+    region: oregon
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --max-requests 1000 --preload app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.9.18"
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: FLASK_ENV
+        value: "production"
+    healthCheckPath: "/health"
