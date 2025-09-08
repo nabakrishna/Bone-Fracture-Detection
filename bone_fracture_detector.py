@@ -97,7 +97,7 @@ class BoneFractureDetectionSystem:
             'learning_rate': 0.01,
             
             # Model configuration
-            'model_name': 'yolov8s',
+            'model_name': 'yolov8n',
             'confidence_threshold': 0.3, #change from 0.5 to 0.01
             'iou_threshold': 0.45,
             
@@ -485,5 +485,6 @@ class BoneFractureDetectionSystem:
 # Bone Fracture Detection System
 
 ## Directory Structure
+
 
 
