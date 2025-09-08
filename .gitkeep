@@ -1,0 +1,4 @@
+# Create the directories and .gitkeep files
+mkdir -p static/uploads static/results
+touch static/uploads/.gitkeep
+touch static/results/.gitkeep
