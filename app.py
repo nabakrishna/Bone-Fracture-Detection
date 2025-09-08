@@ -266,7 +266,7 @@ def health_check():
         'service': 'bone-fracture-detection',
         'version': '1.0.0'
     })
-
+    
 @app.route('/upload', methods=['POST'])
 def upload_file():
     """Handle file upload and fracture detection"""
@@ -303,23 +303,55 @@ def upload_file():
             detection_system.config['confidence_threshold'] = confidence_threshold
             detection_result = detection_system.detect_fractures(
                 filepath, 
-                save_results=True
+                save_results=True  # This should save the annotated image
             )
+            
+            # Process results for frontend
             processed_result = process_detection_result(detection_result, filepath)
+            
+            # IMPORTANT: Use the annotated image path, not original
+            annotated_image_path = detection_result.get('output_path', filepath)
+            if annotated_image_path and os.path.exists(annotated_image_path):
+                # Copy annotated image to static folder
+                annotated_filename = f"annotated_{unique_filename}"
+                annotated_static_path = os.path.join(app.config['UPLOAD_FOLDER'], annotated_filename)
+                
+                # Copy the annotated image
+                import shutil
+                try:
+                    shutil.copy2(annotated_image_path, annotated_static_path)
+                    logger.info(f"✅ Annotated image copied: {annotated_filename}")
+                except Exception as e:
+                    logger.error(f"❌ Failed to copy annotated image: {e}")
+                    annotated_filename = unique_filename  # Use original as fallback
+                
+                processed_result.update({
+                    'filename': unique_filename,
+                    'file_size': f"{file_size} MB",
+                    'image_url': f'/static/uploads/{unique_filename}',  # Original
+                    'analyzed_image_url': f'/static/uploads/{annotated_filename}'  # With detections
+                })
+            else:
+                # Fallback to original image if annotated not available
+                logger.warning("⚠️ No annotated image found, using original")
+                processed_result.update({
+                    'filename': unique_filename,
+                    'file_size': f"{file_size} MB",
+                    'image_url': f'/static/uploads/{unique_filename}',
+                    'analyzed_image_url': f'/static/uploads/{unique_filename}'
+                })
         else:
             # Use demo results if detection system not available
             logger.warning("Using demo detection results")
             processed_result = demo_detection_result(filepath)
-        
-        if processed_result['success']:
-            # Add file information
             processed_result.update({
                 'filename': unique_filename,
                 'file_size': f"{file_size} MB",
                 'image_url': f'/static/uploads/{unique_filename}',
-                'analyzed_image_url': f'/static/uploads/{unique_filename}'  # Use original if no processed version
+                'analyzed_image_url': f'/static/uploads/{unique_filename}'
             })
-            
+        
+        if processed_result['success']:
             logger.info(f"Detection completed: {len(processed_result.get('detections', []))} fractures found")
             return jsonify(processed_result)
         else:
@@ -328,6 +360,7 @@ def upload_file():
     except Exception as e:
         logger.error(f"Upload processing error: {e}")
         return jsonify({'error': f'Processing failed: {str(e)}'}), 500
+
 
 @app.route('/batch-analyze', methods=['POST'])
 def batch_analyze():
@@ -370,6 +403,7 @@ def batch_analyze():
     except Exception as e:
         logger.error(f"Batch analysis error: {e}")
         return jsonify({'error': f'Batch processing failed: {str(e)}'}), 500
+        
 
 @app.route('/test-model', methods=['GET'])
 def test_model():
