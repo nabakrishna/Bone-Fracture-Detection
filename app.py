@@ -16,6 +16,7 @@ import numpy as np
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 import logging
+import shutil
 
 # Import your bone fracture detection system
 try:
