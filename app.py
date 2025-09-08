@@ -17,6 +17,8 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 import logging
 import shutil
+import gc
+import torch
 
 # Import your bone fracture detection system
 try:
@@ -47,23 +49,6 @@ app.config.update({
     'PROJECT_ROOT': os.getcwd()
 })
 
-# Create necessary directories safely (RENDER FIX)
-# def create_directories():
-#     """Create necessary directories safely"""
-#     directories = [
-#         app.config['UPLOAD_FOLDER'],
-#         'static/results',
-#         'logs',
-#         'models/trained'
-#     ]
-    
-#     for directory in directories:
-#         try:
-#             os.makedirs(directory, exist_ok=True)  # exist_ok=True prevents the error
-#             logger.info(f"✅ Directory created/verified: {directory}")
-#         except Exception as e:
-#             logger.error(f"❌ Failed to create directory {directory}: {e}")
-
 def create_directories():
     """Create necessary directories safely"""
     directories = [
@@ -90,43 +75,6 @@ create_directories()
 # Global variables
 detection_system = None
 model_loaded = False
-
-# def initialize_detection_system():
-#     """Initialize the bone fracture detection system"""
-#     global detection_system, model_loaded
-#     try:
-#         if BoneFractureDetectionSystem is None:
-#             logger.warning("⚠️ BoneFractureDetectionSystem not available, running in demo mode")
-#             model_loaded = False
-#             return
-            
-#         project_root = app.config['PROJECT_ROOT']
-#         detection_system = BoneFractureDetectionSystem(project_root=project_root)
-        
-#         # Try to load a trained model if available
-#         trained_models_dir = Path(project_root) / "models" / "trained"
-#         best_model_path = None
-        
-#         # Look for trained models
-#         if trained_models_dir.exists():
-#             for model_dir in trained_models_dir.glob("*/weights"):
-#                 best_model = model_dir / "best.pt"
-#                 if best_model.exists():
-#                     best_model_path = str(best_model)
-#                     break
-        
-#         # Load model
-#         if detection_system.load_model(best_model_path):
-#             model_loaded = True
-#             logger.info(f"✅ Model loaded successfully: {best_model_path or 'pretrained'}")
-#         else:
-#             logger.warning("⚠️ Model loading failed, will use pretrained model")
-#             model_loaded = False
-            
-#     except Exception as e:
-#         logger.error(f"❌ Failed to initialize detection system: {e}")
-#         detection_system = None
-#         model_loaded = False
 
 def initialize_detection_system():
     """Initialize the bone fracture detection system"""
@@ -333,10 +281,14 @@ def health_check():
         'version': '1.0.0'
     })
     
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     """Handle file upload and fracture detection"""
     try:
+        # Clear memory before processing
+        gc.collect()
+        
         # Check if file is present
         if 'file' not in request.files:
             return jsonify({'error': 'No file uploaded'}), 400
@@ -358,47 +310,46 @@ def upload_file():
         
         # Get file info
         file_size = get_file_size_mb(filepath)
-        
         logger.info(f"Processing uploaded file: {unique_filename} ({file_size}MB)")
         
         # Get confidence threshold from request
         confidence_threshold = float(request.form.get('confidence', 0.3))
+        
+        # Clear memory before AI processing
+        gc.collect()
         
         # Run fracture detection
         if detection_system and model_loaded:
             detection_system.config['confidence_threshold'] = confidence_threshold
             detection_result = detection_system.detect_fractures(
                 filepath, 
-                save_results=True  # This should save the annotated image
+                save_results=True
             )
             
             # Process results for frontend
             processed_result = process_detection_result(detection_result, filepath)
             
-            # IMPORTANT: Use the annotated image path, not original
+            # Handle annotated image
             annotated_image_path = detection_result.get('output_path', filepath)
             if annotated_image_path and os.path.exists(annotated_image_path):
-                # Copy annotated image to static folder
                 annotated_filename = f"annotated_{unique_filename}"
                 annotated_static_path = os.path.join(app.config['UPLOAD_FOLDER'], annotated_filename)
                 
-                # Copy the annotated image
                 import shutil
                 try:
                     shutil.copy2(annotated_image_path, annotated_static_path)
                     logger.info(f"✅ Annotated image copied: {annotated_filename}")
                 except Exception as e:
                     logger.error(f"❌ Failed to copy annotated image: {e}")
-                    annotated_filename = unique_filename  # Use original as fallback
+                    annotated_filename = unique_filename
                 
                 processed_result.update({
                     'filename': unique_filename,
                     'file_size': f"{file_size} MB",
-                    'image_url': f'/static/uploads/{unique_filename}',  # Original
-                    'analyzed_image_url': f'/static/uploads/{annotated_filename}'  # With detections
+                    'image_url': f'/static/uploads/{unique_filename}',
+                    'analyzed_image_url': f'/static/uploads/{annotated_filename}'
                 })
             else:
-                # Fallback to original image if annotated not available
                 logger.warning("⚠️ No annotated image found, using original")
                 processed_result.update({
                     'filename': unique_filename,
@@ -407,7 +358,6 @@ def upload_file():
                     'analyzed_image_url': f'/static/uploads/{unique_filename}'
                 })
         else:
-            # Use demo results if detection system not available
             logger.warning("Using demo detection results")
             processed_result = demo_detection_result(filepath)
             processed_result.update({
@@ -417,6 +367,9 @@ def upload_file():
                 'analyzed_image_url': f'/static/uploads/{unique_filename}'
             })
         
+        # Clear memory after processing
+        gc.collect()
+        
         if processed_result['success']:
             logger.info(f"Detection completed: {len(processed_result.get('detections', []))} fractures found")
             return jsonify(processed_result)
@@ -424,8 +377,11 @@ def upload_file():
             return jsonify(processed_result), 500
             
     except Exception as e:
+        # Clear memory on error
+        gc.collect()
         logger.error(f"Upload processing error: {e}")
-        return jsonify({'error': f'Processing failed: {str(e)}'}), 500
+        return jsonify({'success': False, 'error': f'Processing failed: {str(e)}'}), 500
+
 
 
 @app.route('/batch-analyze', methods=['POST'])
