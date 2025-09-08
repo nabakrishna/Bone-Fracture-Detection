@@ -76,8 +76,14 @@ class BoneFractureDetectionSystem:
         
         # Create all directories
         for name, path in self.dirs.items():
-            path.mkdir(parents=True, exist_ok=True)
-        
+            # path.mkdir(parents=True, exist_ok=True)
+            try:
+                path.mkdir(parents=True, exist_ok=True)
+            except FileExistsError:
+                pass
+            except Exception as e:
+                print(f"Warning: Could not create directory {path}: {e}")
+                
         print("✅ Directory structure created successfully!")
     
     def setup_config(self):
@@ -479,4 +485,5 @@ class BoneFractureDetectionSystem:
 # Bone Fracture Detection System
 
 ## Directory Structure
+
 
