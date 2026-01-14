@@ -1,47 +1,30 @@
-BoneScan AI - Bone Fracture Detection System
-About the Project
-BoneScan AI is an intelligent web-based system designed to help healthcare professionals quickly and accurately detect bone fractures in X-ray images. Using advanced artificial intelligence, the system can analyze medical images within seconds and provide detailed results with visual annotations, making it easier for medical staff to identify potential fractures and make informed decisions.
+# BoneScan AI - Bone Fracture Detection System
+
+## About the Project
+BoneScan AI is our hands-on project where we took a pre-trained YOLOv8 model and fine-tuned it ourselves on 8K+ real X-ray images to detect bone fractures. Doctors can upload an X-ray, and within seconds get bounding boxes around fractures, confidence scores, and helpful medical insights.
 
 The system combines cutting-edge machine learning technology with a user-friendly interface, allowing doctors and radiologists to simply upload X-ray images and receive immediate AI-assisted analysis with confidence scores and medical recommendations.
 
-🚀 Live Demo
-Try BoneScan AI
 
-🛠️ Technologies Used
-Backend
-Python - Core programming language
+## 🛠️ Technologies Used
+**Backend**: Python • Flask • **YOLOv8 (fine-tuned)** • PyTorch • OpenCV • Ultralytics  
+**Frontend**: HTML5 • CSS3 • JavaScript • Font Awesome  
+**Deployment**: Gunicorn • Render
 
-Flask - Web framework for API and routing
+## 🚀 Results & Performance 
+![Results](results/metrics/results.png)
 
-YOLOv8 - Deep learning model for object detection
+## 🚀 Confusion Metrics
+![Metrics](results/metrics/confusion_matrix.png)
 
-PyTorch - Machine learning framework
+## 🚀 labels
+![Metrics](results/metrics/labels.jpg)
 
-OpenCV - Image processing and computer vision
+## 🚀 labels_correlogram
+![Results](results/metrics/labels_correlogram.jpg)
 
-Ultralytics - YOLO implementation library
 
-NumPy - Numerical computations
-
-Pillow - Image manipulation
-
-Frontend
-HTML5 - Structure and markup
-
-CSS3 - Styling and responsive design
-
-JavaScript - Interactive functionality
-
-Font Awesome - Icons
-
-Google Fonts - Typography
-
-Deployment
-Gunicorn - Production web server
-
-Render - Cloud hosting platform
-
-⚡ Quick Start
+## ⚡ Quick Start
 Clone the repository
 
 bash
@@ -81,8 +64,8 @@ Get detailed analysis with confidence scores and medical recommendations
 
 ✅ Privacy-focused (local processing)
 
-⚠️ Medical Disclaimer
+### ⚠️ Medical Disclaimer
 This tool is designed to assist healthcare professionals and should not replace professional medical diagnosis or treatment decisions.
 
-📄 License
+### 📄 License
 MIT License - feel free to use and modify for your projects.
